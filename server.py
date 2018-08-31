@@ -13,7 +13,7 @@ logger = logging.getLogger()
 
 async def handle(request):
     logger.info("start_{}".format(request.match_info.get('name')))
-    await asyncio.sleep(random.randint(0, 3))
+    await asyncio.sleep(random.uniform(0, 0.1))
     logger.info("end_{}".format(request.match_info.get('name')))
     return web.Response(text="Hello, World!")
 
