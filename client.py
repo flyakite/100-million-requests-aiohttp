@@ -1,8 +1,9 @@
-from aiohttp import ClientSession
 import argparse
 import asyncio
 import sys
 import resource
+from aiohttp import ClientSession
+from functools import partial
 
 def get_mem():
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1000000
@@ -20,9 +21,6 @@ async def run(session, number_of_requests, concurrent_limit):
             sem.release()
             responses.append(response)
             if i % 100 == 0:
-                for task in tasks:
-                    if task.done():
-                        tasks.remove(task)
                 print("n:{:10d} tasks:{:10d} {:.1f}MB".format(i, len(tasks), get_mem()))
             return response
 
@@ -30,6 +28,7 @@ async def run(session, number_of_requests, concurrent_limit):
         await sem.acquire()
         url = base_url.format(i)
         task = asyncio.ensure_future(fetch(i))
+        task.add_done_callback(tasks.remove)
         tasks.append(task)
 
     await asyncio.wait(tasks)
